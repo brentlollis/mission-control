@@ -10,8 +10,9 @@ export function LocalModeBanner() {
   const navigateToPanel = useNavigateToPanel()
   const t = useTranslations('localModeBanner')
   const tc = useTranslations('common')
+  const isIntentionalLocalOnly = process.env.NEXT_PUBLIC_LOCAL_ONLY === 'true'
 
-  if (!capabilitiesChecked || dashboardMode === 'full' || bannerDismissed) return null
+  if (!capabilitiesChecked || dashboardMode === 'full' || bannerDismissed || isIntentionalLocalOnly) return null
 
   return (
     <div className="mx-4 mt-3 mb-0 flex items-center gap-3 px-4 py-2.5 rounded-lg bg-void-cyan/5 border border-void-cyan/15 text-sm">

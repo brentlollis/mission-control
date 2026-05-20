@@ -21,6 +21,13 @@ const headers = { 'Cache-Control': 'public, max-age=3600' }
 export async function GET() {
   let installed: string | null = null
 
+  if (process.env.OPENCLAW_ENABLED === '0') {
+    return NextResponse.json(
+      { installed: null, latest: null, updateAvailable: false, disabled: true },
+      { headers }
+    )
+  }
+
   try {
     const result = await runOpenClaw(['--version'], { timeoutMs: 3000 })
     const match = result.stdout.match(/(\d+\.\d+\.\d+)/)

@@ -22,6 +22,18 @@ This Mission Control checkout tracks upstream releases, but this machine is inte
 - Purpose: make the Docs APIs recognize canonical `Documentation` folders and the configured memory prefixes.
 - Reason: Brent AI projects use `Documentation` as the canonical handoff/memory folder, not only `docs`, `memory`, or `knowledge-base`.
 
+## Patch: Managed Release Awareness
+
+- Files: `src/app/api/releases/check/route.ts`, `src/components/layout/update-banner.tsx`
+- Purpose: compare upstream releases against `MC_CURRENT_RELEASE_TAG` instead of only `package.json`.
+- Reason: upstream package metadata can lag the release tag, and this checkout carries local commits on top of upstream tags. The dashboard should notify when a newer upstream release exists, not when package metadata is stale or a stale browser cache says so. In local-only mode, the banner does not show the in-app update button; updates should go through `C:\Users\brent-ai\Projects\_system\scripts\Update-MissionControl.ps1`.
+
+## Patch: Intentional Local-Only Mode
+
+- Files: `src/components/layout/local-mode-banner.tsx`, `src/app/[[...panel]]/page.tsx`, `src/app/api/openclaw/version/route.ts`
+- Purpose: suppress missing-gateway/OpenClaw update prompts when `NEXT_PUBLIC_LOCAL_ONLY=true` and `OPENCLAW_ENABLED=0`.
+- Reason: local-only is the selected architecture on this machine, not an incomplete gateway setup.
+
 ## Local Config That Must Survive Updates
 
 These are intentionally in `.env`, which is ignored by git:
@@ -31,6 +43,8 @@ OPENCLAW_MEMORY_DIR=C:\Users\brent-ai\Projects
 MC_MEMORY_ALLOWED_PREFIXES=Documentation/;active/autonomous-worker-machine/Documentation/;active/creative-state/Documentation/;active/bellara-brass/Documentation/;active/heritage-trumpets/Documentation/;_system/docs/
 OPENCLAW_ENABLED=0
 NEXT_PUBLIC_GATEWAY_OPTIONAL=true
+NEXT_PUBLIC_LOCAL_ONLY=true
+MC_CURRENT_RELEASE_TAG=v2.0.1
 ```
 
 Do not store secrets from `.env` in docs, chat, logs, or commits.
@@ -45,4 +59,6 @@ After rebasing onto any upstream release:
 4. Verify `/api/memory?action=tree&depth=3` lists the curated documentation roots.
 5. Verify `/api/docs/tree` lists the same roots.
 6. Verify search for `local-only` finds the root and machine handoff docs.
-7. Verify `\AI-Worker\Mission Control Codex Worker` is running and `codex-worker` heartbeats.
+7. Verify `/api/releases/check` returns `updateAvailable: false` for the currently applied release tag.
+8. Verify the dashboard has no missing OpenClaw/gateway banner in local-only mode.
+9. Verify `\AI-Worker\Mission Control Codex Worker` is running and `codex-worker` heartbeats.

@@ -13,6 +13,7 @@ export function UpdateBanner() {
   const tc = useTranslations('common')
   const [state, setState] = useState<UpdateState>('idle')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const isManagedLocalOnly = process.env.NEXT_PUBLIC_LOCAL_ONLY === 'true'
 
   if (!updateAvailable) return null
   if (updateDismissedVersion === updateAvailable.latestVersion) return null
@@ -90,13 +91,15 @@ export function UpdateBanner() {
       </p>
       {!isbusy && (
         <>
-          <button
-            onClick={handleUpdate}
-            disabled={isbusy}
-            className="shrink-0 text-2xs font-medium text-emerald-900 bg-emerald-500 hover:bg-emerald-400 px-2.5 py-1 rounded transition-colors"
-          >
-            {tc('updateNow')}
-          </button>
+          {!isManagedLocalOnly && (
+            <button
+              onClick={handleUpdate}
+              disabled={isbusy}
+              className="shrink-0 text-2xs font-medium text-emerald-900 bg-emerald-500 hover:bg-emerald-400 px-2.5 py-1 rounded transition-colors"
+            >
+              {tc('updateNow')}
+            </button>
+          )}
           <a
             href={updateAvailable.releaseUrl}
             target="_blank"

@@ -229,7 +229,7 @@ export default function Home() {
       .catch(() => { markStep('auth') })
 
     // Check for available updates
-    fetch('/api/releases/check')
+    fetch('/api/releases/check', { cache: 'no-store' })
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (data?.updateAvailable) {
@@ -242,23 +242,27 @@ export default function Home() {
       })
       .catch(() => {})
 
-    // Check for OpenClaw updates
-    fetch('/api/openclaw/version')
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data?.updateAvailable) {
-          setOpenclawUpdate({
-            installed: data.installed,
-            latest: data.latest,
-            releaseUrl: data.releaseUrl,
-            releaseNotes: data.releaseNotes,
-            updateCommand: data.updateCommand,
-          })
-        } else {
-          setOpenclawUpdate(null)
-        }
-      })
-      .catch(() => {})
+    // Check for OpenClaw updates only when this install is not intentionally local-only.
+    if (process.env.NEXT_PUBLIC_LOCAL_ONLY === 'true') {
+      setOpenclawUpdate(null)
+    } else {
+      fetch('/api/openclaw/version')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.updateAvailable) {
+            setOpenclawUpdate({
+              installed: data.installed,
+              latest: data.latest,
+              releaseUrl: data.releaseUrl,
+              releaseNotes: data.releaseNotes,
+              updateCommand: data.updateCommand,
+            })
+          } else {
+            setOpenclawUpdate(null)
+          }
+        })
+        .catch(() => {})
+    }
 
     // Check capabilities, then conditionally connect to gateway
     fetch('/api/status?action=capabilities')
