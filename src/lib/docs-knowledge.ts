@@ -4,7 +4,7 @@ import { dirname, join, sep } from 'path'
 import { resolveWithin } from '@/lib/paths'
 import { config } from '@/lib/config'
 
-const DOC_ROOT_CANDIDATES = ['docs', 'knowledge-base', 'knowledge', 'memory']
+const DOC_ROOT_CANDIDATES = ['docs', 'Documentation', 'knowledge-base', 'knowledge', 'memory']
 
 export interface DocsTreeNode {
   path: string
@@ -58,14 +58,13 @@ async function resolveSafePath(baseDir: string, relativePath: string): Promise<s
 
 function allowedRoots(baseDir: string): string[] {
   const candidateRoots = DOC_ROOT_CANDIDATES.filter((root) => existsSync(join(baseDir, root)))
-  if (candidateRoots.length > 0) return candidateRoots
 
   const fromConfig = (config.memoryAllowedPrefixes || [])
     .map((prefix) => normalizeRelativePath(prefix).replace(/\/$/, ''))
     .filter((prefix) => prefix.length > 0)
     .filter((prefix) => existsSync(join(baseDir, prefix)))
 
-  return fromConfig
+  return Array.from(new Set([...candidateRoots, ...fromConfig]))
 }
 
 export function listDocsRoots(): string[] {

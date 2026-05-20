@@ -63,6 +63,11 @@ const defaultMemoryDir = (() => {
   return (openclawStateDir ? path.join(openclawStateDir, 'memory') : '') || path.join(defaultDataDir, 'memory')
 })()
 
+const configuredMemoryAllowedPrefixes = (process.env.MC_MEMORY_ALLOWED_PREFIXES || '')
+  .split(/[;,]/)
+  .map((prefix) => prefix.trim().replace(/\\/g, '/').replace(/^\/+/, '').replace(/\/?$/, '/'))
+  .filter(Boolean)
+
 const resolvedGnapRepoPath =
   process.env.GNAP_REPO_PATH || path.join(configuredDataDir, '.gnap')
 
@@ -86,8 +91,9 @@ export const config = {
     (openclawStateDir ? path.join(openclawStateDir, 'logs') : ''),
   tempLogsDir: process.env.CLAWDBOT_TMP_LOG_DIR || '',
   memoryDir: defaultMemoryDir,
-  memoryAllowedPrefixes:
-    defaultMemoryDir === openclawWorkspaceDir
+  memoryAllowedPrefixes: configuredMemoryAllowedPrefixes.length
+    ? configuredMemoryAllowedPrefixes
+    : defaultMemoryDir === openclawWorkspaceDir
       ? ['memory/', 'knowledge-base/']
       : [],
   soulTemplatesDir:
