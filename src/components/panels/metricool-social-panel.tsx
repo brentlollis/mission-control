@@ -257,13 +257,21 @@ export function MetricoolSocialPanel() {
 
   async function saveSelected() {
     if (!selectedItem || !captionDrafts) return
+    const shouldSyncLibrary = statusDraft === 'approved' || statusDraft === 'drafted'
+    if (shouldSyncLibrary && selectedDraftNetworks.length === 0) {
+      setFeedback({ ok: false, text: 'Select at least one network before saving approved copy to Metricool.' })
+      return
+    }
+    if (shouldSyncLibrary) {
+      const confirmed = window.confirm('Save these captions to Metricool Posts Library drafts for the selected networks? Missing drafts will be created; existing draft IDs will be updated.')
+      if (!confirmed) return
+    }
     const json = await postAction({
       action: 'save_item',
       itemId: selectedItem.id,
       status: statusDraft,
       captions: captionDrafts,
     }, 'save')
-    setFeedback({ ok: true, text: 'Saved local captions and workflow status.' })
     if (json?.item && data) {
       setData({
         ...data,
@@ -271,6 +279,26 @@ export function MetricoolSocialPanel() {
         audit: json.audit || data.audit,
       })
     }
+    if (shouldSyncLibrary) {
+      const sync = await postAction({
+        action: 'create_drafts',
+        itemId: selectedItem.id,
+        networks: selectedDraftNetworks,
+        captions: captionDrafts,
+        status: statusDraft,
+      }, 'sync-drafts')
+      setFeedback({ ok: true, text: `Saved and synced Metricool Posts Library drafts for ${selectedDraftNetworks.length} network${selectedDraftNetworks.length === 1 ? '' : 's'}.` })
+      if (sync?.item && data) {
+        setData({
+          ...data,
+          inventory: data.inventory.map((item) => item.id === sync.item.id ? sync.item : item),
+          audit: sync.audit || data.audit,
+        })
+      }
+      await loadDashboard(true)
+      return
+    }
+    setFeedback({ ok: true, text: 'Saved local captions and workflow status.' })
   }
 
   async function createDrafts(dryRun: boolean) {
@@ -280,7 +308,7 @@ export function MetricoolSocialPanel() {
       return
     }
     if (!dryRun) {
-      const confirmed = window.confirm('Create visible Metricool Posts Library drafts for the selected networks?')
+      const confirmed = window.confirm('Sync visible Metricool Posts Library drafts for the selected networks? Missing drafts will be created; existing draft IDs will be updated.')
       if (!confirmed) return
     }
     const json = await postAction({
@@ -295,7 +323,7 @@ export function MetricoolSocialPanel() {
       ok: true,
       text: dryRun
         ? `Dry run prepared ${selectedDraftNetworks.length} split draft payloads.`
-        : `Created Metricool drafts for ${selectedDraftNetworks.length} network${selectedDraftNetworks.length === 1 ? '' : 's'}.`,
+        : `Synced Metricool drafts for ${selectedDraftNetworks.length} network${selectedDraftNetworks.length === 1 ? '' : 's'}.`,
     })
     if (!dryRun) await loadDashboard(true)
   }
@@ -598,7 +626,7 @@ export function MetricoolSocialPanel() {
                       </Button>
                       <Button size="xs" onClick={() => createDrafts(false)} disabled={Boolean(busyAction) || statusDraft !== 'approved'}>
                         {busyAction === 'create-drafts' ? <SpinnerIcon /> : <LibraryIcon />}
-                        Create drafts
+                        Sync drafts
                       </Button>
                     </div>
                   </div>

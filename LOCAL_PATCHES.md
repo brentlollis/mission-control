@@ -37,10 +37,10 @@ This Mission Control checkout tracks upstream releases, but this machine is inte
 ## Patch: Metricool Social Panel
 
 - Files: `src/app/api/local/metricool-social/route.ts`, `src/lib/metricool-social-workflow.ts`, `src/lib/__tests__/metricool-social-workflow.test.ts`, `src/components/panels/metricool-social-panel.tsx`, `src/app/[[...panel]]/page.tsx`, `src/components/layout/nav-rail.tsx`
-- Purpose: expose a reusable social publishing cockpit with Metricool brand connection status, Bellara video inventory, platform-specific caption editing, approval status, split Posts Library draft creation, dry-run daily schedule planning, post verification actions, and a local run log in Mission Control.
+- Purpose: expose a reusable social publishing cockpit with Metricool brand connection status, Bellara video inventory, platform-specific caption editing, approval status, split Posts Library draft upsert, dry-run daily schedule planning, post verification actions, and a local run log in Mission Control.
 - Backend source of truth: `C:\Users\brent-ai\Projects\active\metricool-social-agent`
 - Reason: Creative State, Bellara Brass, and Heritage Trumpets need one repeatable social operations surface across sessions without duplicating Metricool API logic in Mission Control.
-- Safety: the route only calls allowlisted agent commands, requires Mission Control auth, writes local JSON state/audit files under `C:\Users\brent-ai\Projects\_system\mission-control\data\metricool-social`, dry-runs schedules, and requires a human UI click before creating live Metricool Posts Library drafts.
+- Safety: the route only calls allowlisted agent commands, requires Mission Control auth, writes local JSON state/audit files under `C:\Users\brent-ai\Projects\_system\mission-control\data\metricool-social`, dry-runs schedules, and requires a human UI click before creating or updating live Metricool Posts Library drafts. Autolist records are inventory only; approved/drafted caption saves sync to Posts Library as the default persistence target.
 
 ## Local Config That Must Survive Updates
 

@@ -119,11 +119,13 @@ export function buildSplitDefinition(item: SocialVideoItem, providers: Provider[
     posts: providers.map((network) => {
       const caption = item.captions[network]
       const post: {
+        id?: number
         network: Provider
         content: string
         firstCommentText: string
         networkData: Record<string, unknown>
       } = {
+        ...(item.draftIds?.[network] ? { id: item.draftIds[network] } : {}),
         network,
         content: caption.content,
         firstCommentText: caption.firstCommentText || '',

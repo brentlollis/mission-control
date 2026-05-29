@@ -217,10 +217,12 @@ function normalizeBusiness(input: unknown): BusinessKey | null {
   return BUSINESS_KEYS.has(key) ? key as BusinessKey : null
 }
 
-function extractCreatedDraftIds(result: any, networks: Provider[]): Partial<Record<Provider, number>> {
+function extractSyncedDraftIds(result: any, networks: Provider[]): Partial<Record<Provider, number>> {
   const created = Array.isArray(result?.created) ? result.created : []
+  const updated = Array.isArray(result?.updated) ? result.updated : []
+  const posts = [...created, ...updated]
   const draftIds: Partial<Record<Provider, number>> = {}
-  for (const post of created) {
+  for (const post of posts) {
     const network = PROVIDERS.find((provider) => post?.networks?.[provider] === true)
     if (network && post?.id) draftIds[network] = Number(post.id)
   }
@@ -347,21 +349,17 @@ export async function POST(request: NextRequest) {
         if (!approvedForDrafts && body?.dryRun !== true) {
           return NextResponse.json({ error: 'Approve this video before creating Metricool drafts.' }, { status: 409 })
         }
-        const duplicateNetworks = networks.filter((network) => item.draftIds?.[network])
-        if (duplicateNetworks.length > 0 && body?.dryRun !== true) {
-          return NextResponse.json({ error: `Draft IDs already exist for: ${duplicateNetworks.join(', ')}` }, { status: 409 })
-        }
         const itemForDrafts: SocialVideoItem = { ...item, captions }
         const definition = buildSplitDefinition(itemForDrafts, networks)
         const definitionPath = await writeTempDefinition('library-split', definition)
         if (body?.dryRun === true) {
-          const dryRun = await runMetricoolCli(['library-create-split', definitionPath, '--dry-run'])
+          const dryRun = await runMetricoolCli(['library-upsert-split', definitionPath, '--dry-run'])
           await appendAudit({ timestamp: new Date().toISOString(), actor: auth.user.username, action: 'create_drafts_dry_run', business: item.business, itemId: item.id, ok: true, durationMs: Date.now() - startedAt })
           return NextResponse.json({ ok: true, dryRun: true, result: dryRun, audit: await readAudit() })
         }
-        const result = await runMetricoolCli(['library-create-split', definitionPath])
-        const createdDraftIds = extractCreatedDraftIds(result, networks)
-        const draftIds: Partial<Record<Provider, number>> = { ...item.draftIds, ...createdDraftIds }
+        const result = await runMetricoolCli(['library-upsert-split', definitionPath])
+        const syncedDraftIds = extractSyncedDraftIds(result, networks)
+        const draftIds: Partial<Record<Provider, number>> = { ...item.draftIds, ...syncedDraftIds }
         state.items[item.id] = {
           ...state.items[item.id],
           status: 'drafted',
@@ -370,7 +368,7 @@ export async function POST(request: NextRequest) {
           updatedAt: new Date().toISOString(),
         }
         await writeState(state)
-        await appendAudit({ timestamp: new Date().toISOString(), actor: auth.user.username, action, business: item.business, itemId: item.id, ids: Object.values(createdDraftIds).map(String), ok: true, durationMs: Date.now() - startedAt })
+        await appendAudit({ timestamp: new Date().toISOString(), actor: auth.user.username, action, business: item.business, itemId: item.id, ids: Object.values(syncedDraftIds).map(String), ok: true, durationMs: Date.now() - startedAt })
         const savedItem = (await buildInventory(state)).find((candidate) => candidate.id === item.id)
         return NextResponse.json({ ok: true, result, item: savedItem ? scrubInventory([savedItem])[0] : null, audit: await readAudit() })
       })

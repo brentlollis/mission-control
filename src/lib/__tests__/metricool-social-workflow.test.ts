@@ -54,11 +54,19 @@ describe('metricool social workflow helpers', () => {
   })
 
   it('builds one first-class Posts Library draft definition per selected network', () => {
-    const definition = buildSplitDefinition(item(), ['facebook', 'youtube', 'tiktok'])
+    const definition = buildSplitDefinition(item({
+      draftIds: {
+        facebook: 189501,
+        youtube: 189502,
+      },
+    }), ['facebook', 'youtube', 'tiktok'])
 
     expect(definition.business).toBe('bellara-brass')
     expect(definition.mediaUrl).toContain('bellara-signature-short-01-two-reverse-tuning-slides.mp4')
     expect(definition.posts.map((post) => post.network)).toEqual(['facebook', 'youtube', 'tiktok'])
+    expect(definition.posts[0].id).toBe(189501)
+    expect(definition.posts[1].id).toBe(189502)
+    expect(definition.posts[2].id).toBeUndefined()
     expect(definition.posts[0].networkData).toEqual({ type: 'REEL' })
     expect(definition.posts[1].networkData).toMatchObject({
       title: 'Two reverse tuning slides | Bellara Signature Model #Shorts',
