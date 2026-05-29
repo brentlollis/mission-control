@@ -34,6 +34,14 @@ This Mission Control checkout tracks upstream releases, but this machine is inte
 - Purpose: suppress missing-gateway/OpenClaw update prompts when `NEXT_PUBLIC_LOCAL_ONLY=true` and `OPENCLAW_ENABLED=0`.
 - Reason: local-only is the selected architecture on this machine, not an incomplete gateway setup.
 
+## Patch: Metricool Social Panel
+
+- Files: `src/app/api/local/metricool-social/route.ts`, `src/lib/metricool-social-workflow.ts`, `src/lib/__tests__/metricool-social-workflow.test.ts`, `src/components/panels/metricool-social-panel.tsx`, `src/app/[[...panel]]/page.tsx`, `src/components/layout/nav-rail.tsx`
+- Purpose: expose a reusable social publishing cockpit with Metricool brand connection status, Bellara video inventory, platform-specific caption editing, approval status, split Posts Library draft creation, dry-run daily schedule planning, post verification actions, and a local run log in Mission Control.
+- Backend source of truth: `C:\Users\brent-ai\Projects\active\metricool-social-agent`
+- Reason: Creative State, Bellara Brass, and Heritage Trumpets need one repeatable social operations surface across sessions without duplicating Metricool API logic in Mission Control.
+- Safety: the route only calls allowlisted agent commands, requires Mission Control auth, writes local JSON state/audit files under `C:\Users\brent-ai\Projects\_system\mission-control\data\metricool-social`, dry-runs schedules, and requires a human UI click before creating live Metricool Posts Library drafts.
+
 ## Local Config That Must Survive Updates
 
 These are intentionally in `.env`, which is ignored by git:
@@ -62,3 +70,4 @@ After rebasing onto any upstream release:
 7. Verify `/api/releases/check` returns `updateAvailable: false` for the currently applied release tag.
 8. Verify the dashboard has no missing OpenClaw/gateway banner in local-only mode.
 9. Verify `\AI-Worker\Mission Control Codex Worker` is running and `codex-worker` heartbeats.
+10. Verify `/social` loads the Metricool Social cockpit and `/api/local/metricool-social` returns the configured brands plus Bellara inventory.
