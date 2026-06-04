@@ -27,6 +27,37 @@ interface ShipmentRow {
   currency?: string
 }
 
+interface TransactionRow {
+  id: number
+  customer_name?: string
+  business?: string
+  source: string
+  source_id: string
+  transaction_type: string
+  occurred_at?: string
+  status?: string
+  title?: string
+  amount?: number
+  currency?: string
+}
+
+interface TransactionItemRow {
+  id: number
+  customer_name?: string
+  source: string
+  source_item_id: string
+  platform_listing_id?: string
+  sku?: string
+  serial_number?: string
+  title?: string
+  brand?: string
+  model?: string
+  quantity?: number
+  unit_amount?: number
+  total_amount?: number
+  currency?: string
+}
+
 interface SourceRow {
   source: string
   source_kind: string
@@ -43,8 +74,12 @@ interface DashboardResponse {
   customerCount: number
   shipmentCount: number
   transactionCount: number
+  transactionItemCount: number
+  instrumentCount: number
   sourceRecordCount: number
   customers: CustomerRow[]
+  transactions: TransactionRow[]
+  transactionItems: TransactionItemRow[]
   shipments: ShipmentRow[]
   sources: SourceRow[]
 }
@@ -128,12 +163,13 @@ export function TrumpetCustomerDashboardPanel() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
         <Metric label="Customers" value={String(data?.customerCount || 0)} />
         <Metric label="Transactions" value={String(data?.transactionCount || 0)} />
         <Metric label="Shipments" value={String(data?.shipmentCount || 0)} />
+        <Metric label="Items" value={String(data?.transactionItemCount || 0)} />
+        <Metric label="Instruments" value={String(data?.instrumentCount || 0)} />
         <Metric label="Source Rows" value={String(data?.sourceRecordCount || 0)} />
-        <Metric label="Refresh" value={data?.generatedAt ? new Date(data.generatedAt).toLocaleTimeString() : '-'} />
       </div>
 
       <section className="rounded-lg border border-border bg-card overflow-hidden">
@@ -202,6 +238,78 @@ export function TrumpetCustomerDashboardPanel() {
           </div>
         ) : (
           <EmptyState text="No customers imported yet." />
+        )}
+      </section>
+
+      <section className="rounded-lg border border-border bg-card overflow-hidden">
+        <div className="px-4 py-3 border-b border-border">
+          <h3 className="text-sm font-medium text-foreground">Recent Transactions</h3>
+        </div>
+        {data?.transactions?.length ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs min-w-[980px]">
+              <thead>
+                <tr className="border-b border-border text-muted-foreground">
+                  <th className="text-left px-3 py-2 font-medium">Customer</th>
+                  <th className="text-left px-3 py-2 font-medium">Source</th>
+                  <th className="text-left px-3 py-2 font-medium">Type</th>
+                  <th className="text-left px-3 py-2 font-medium">Status</th>
+                  <th className="text-left px-3 py-2 font-medium">Title</th>
+                  <th className="text-left px-3 py-2 font-medium">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.transactions.map((transaction) => (
+                  <tr key={transaction.id} className="border-b border-border/50 hover:bg-secondary/40">
+                    <td className="px-3 py-2 text-foreground font-medium">{transaction.customer_name || '-'}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{transaction.source}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{transaction.transaction_type}</td>
+                    <td className="px-3 py-2"><StatusPill ok label={transaction.status || 'Imported'} /></td>
+                    <td className="px-3 py-2 text-muted-foreground">{transaction.title || '-'}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{formatMoney(transaction.amount, transaction.currency)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState text="No transactions imported yet." />
+        )}
+      </section>
+
+      <section className="rounded-lg border border-border bg-card overflow-hidden">
+        <div className="px-4 py-3 border-b border-border">
+          <h3 className="text-sm font-medium text-foreground">Recent Items</h3>
+        </div>
+        {data?.transactionItems?.length ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs min-w-[980px]">
+              <thead>
+                <tr className="border-b border-border text-muted-foreground">
+                  <th className="text-left px-3 py-2 font-medium">Customer</th>
+                  <th className="text-left px-3 py-2 font-medium">Source</th>
+                  <th className="text-left px-3 py-2 font-medium">SKU</th>
+                  <th className="text-left px-3 py-2 font-medium">Serial</th>
+                  <th className="text-left px-3 py-2 font-medium">Title</th>
+                  <th className="text-left px-3 py-2 font-medium">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.transactionItems.map((item) => (
+                  <tr key={item.id} className="border-b border-border/50 hover:bg-secondary/40">
+                    <td className="px-3 py-2 text-foreground font-medium">{item.customer_name || '-'}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{item.source}</td>
+                    <td className="px-3 py-2 font-mono text-muted-foreground">{item.sku || '-'}</td>
+                    <td className="px-3 py-2 font-mono text-muted-foreground">{item.serial_number || '-'}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{item.title || '-'}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{formatMoney(item.total_amount ?? item.unit_amount, item.currency)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState text="No item details imported yet." />
         )}
       </section>
 

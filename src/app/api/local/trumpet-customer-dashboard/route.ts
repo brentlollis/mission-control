@@ -29,8 +29,12 @@ function dashboardSummary() {
       customerCount: 0,
       shipmentCount: 0,
       transactionCount: 0,
+      transactionItemCount: 0,
+      instrumentCount: 0,
       sourceRecordCount: 0,
       customers: [],
+      transactions: [],
+      transactionItems: [],
       shipments: [],
       sources: [],
     }
@@ -41,6 +45,8 @@ function dashboardSummary() {
       customerCount: db.prepare('SELECT COUNT(*) AS count FROM customers').get() as { count: number },
       shipmentCount: db.prepare('SELECT COUNT(*) AS count FROM shipments').get() as { count: number },
       transactionCount: db.prepare('SELECT COUNT(*) AS count FROM transactions').get() as { count: number },
+      transactionItemCount: db.prepare('SELECT COUNT(*) AS count FROM transaction_items').get() as { count: number },
+      instrumentCount: db.prepare('SELECT COUNT(*) AS count FROM instrument_records').get() as { count: number },
       sourceRecordCount: db.prepare('SELECT COUNT(*) AS count FROM source_records').get() as { count: number },
     }
     const customers = db.prepare(`
@@ -64,6 +70,24 @@ function dashboardSummary() {
       ORDER BY COALESCE(s.shipment_date, s.created_at) DESC
       LIMIT 100
     `).all()
+    const transactions = db.prepare(`
+      SELECT t.id, t.business, t.source, t.source_id, t.transaction_type, t.occurred_at,
+        t.status, t.title, t.amount, t.currency, c.display_name AS customer_name
+      FROM transactions t
+      LEFT JOIN customers c ON c.id = t.customer_id
+      ORDER BY COALESCE(t.occurred_at, t.created_at) DESC
+      LIMIT 100
+    `).all()
+    const transactionItems = db.prepare(`
+      SELECT ti.id, ti.source, ti.source_item_id, ti.platform_listing_id, ti.sku, ti.serial_number,
+        ti.title, ti.brand, ti.model, ti.quantity, ti.unit_amount, ti.total_amount, ti.currency,
+        t.source_id AS transaction_source_id, c.display_name AS customer_name
+      FROM transaction_items ti
+      LEFT JOIN transactions t ON t.id = ti.transaction_id
+      LEFT JOIN customers c ON c.id = t.customer_id
+      ORDER BY ti.created_at DESC
+      LIMIT 100
+    `).all()
     const sources = db.prepare(`
       SELECT source, source_kind, COUNT(*) AS count, MAX(imported_at) AS last_imported_at
       FROM source_records
@@ -79,8 +103,12 @@ function dashboardSummary() {
       customerCount: counts.customerCount.count,
       shipmentCount: counts.shipmentCount.count,
       transactionCount: counts.transactionCount.count,
+      transactionItemCount: counts.transactionItemCount.count,
+      instrumentCount: counts.instrumentCount.count,
       sourceRecordCount: counts.sourceRecordCount.count,
       customers,
+      transactions,
+      transactionItems,
       shipments,
       sources,
     }
