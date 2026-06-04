@@ -31,8 +31,13 @@ function dashboardSummary() {
       transactionCount: 0,
       transactionItemCount: 0,
       instrumentCount: 0,
+      inventoryCount: 0,
+      activeListingCount: 0,
+      soldItemCount: 0,
       sourceRecordCount: 0,
       customers: [],
+      inventoryItems: [],
+      soldItems: [],
       transactions: [],
       transactionItems: [],
       shipments: [],
@@ -47,6 +52,9 @@ function dashboardSummary() {
       transactionCount: db.prepare('SELECT COUNT(*) AS count FROM transactions').get() as { count: number },
       transactionItemCount: db.prepare('SELECT COUNT(*) AS count FROM transaction_items').get() as { count: number },
       instrumentCount: db.prepare('SELECT COUNT(*) AS count FROM instrument_records').get() as { count: number },
+      inventoryCount: db.prepare("SELECT COUNT(*) AS count FROM inventory_items WHERE owned = 1 OR status IN ('owned', 'listed')").get() as { count: number },
+      activeListingCount: db.prepare("SELECT COUNT(*) AS count FROM inventory_listings WHERE lower(COALESCE(status, '')) = 'active'").get() as { count: number },
+      soldItemCount: db.prepare('SELECT COUNT(*) AS count FROM sold_items').get() as { count: number },
       sourceRecordCount: db.prepare('SELECT COUNT(*) AS count FROM source_records').get() as { count: number },
     }
     const customers = db.prepare(`
@@ -78,6 +86,31 @@ function dashboardSummary() {
       ORDER BY COALESCE(t.occurred_at, t.created_at) DESC
       LIMIT 100
     `).all()
+    const inventoryItems = db.prepare(`
+      SELECT ii.id, ii.business, ii.status, ii.brand, ii.model, ii.serial_number, ii.sku, ii.title,
+        ii.year, ii.bore_size, ii.owned, ii.asking_price, ii.currency, ii.confidence,
+        MAX(CASE WHEN il.source = 'ecwid' THEN il.status END) AS ecwid_status,
+        MAX(CASE WHEN il.source = 'reverb' THEN il.status END) AS reverb_status,
+        MAX(CASE WHEN il.source = 'ebay' THEN il.status END) AS ebay_status,
+        COUNT(DISTINCT il.id) AS listing_count
+      FROM inventory_items ii
+      LEFT JOIN inventory_listings il ON il.inventory_item_id = ii.id
+      WHERE ii.owned = 1 OR ii.status IN ('owned', 'listed')
+      GROUP BY ii.id
+      ORDER BY ii.owned DESC, COALESCE(ii.updated_at, ii.created_at) DESC
+      LIMIT 200
+    `).all()
+    const soldItems = db.prepare(`
+      SELECT si.id, si.source, si.source_sale_id, si.source_item_id, si.sold_at, si.title, si.sku,
+        si.serial_number, si.amount, si.currency, si.status, c.display_name AS customer_name,
+        ii.brand, ii.model, s.tracking_number
+      FROM sold_items si
+      LEFT JOIN customers c ON c.id = si.customer_id
+      LEFT JOIN inventory_items ii ON ii.id = si.inventory_item_id
+      LEFT JOIN shipments s ON s.transaction_id = si.transaction_id
+      ORDER BY COALESCE(si.sold_at, si.created_at) DESC
+      LIMIT 200
+    `).all()
     const transactionItems = db.prepare(`
       SELECT ti.id, ti.source, ti.source_item_id, ti.platform_listing_id, ti.sku, ti.serial_number,
         ti.title, ti.brand, ti.model, ti.quantity, ti.unit_amount, ti.total_amount, ti.currency,
@@ -105,8 +138,13 @@ function dashboardSummary() {
       transactionCount: counts.transactionCount.count,
       transactionItemCount: counts.transactionItemCount.count,
       instrumentCount: counts.instrumentCount.count,
+      inventoryCount: counts.inventoryCount.count,
+      activeListingCount: counts.activeListingCount.count,
+      soldItemCount: counts.soldItemCount.count,
       sourceRecordCount: counts.sourceRecordCount.count,
       customers,
+      inventoryItems,
+      soldItems,
       transactions,
       transactionItems,
       shipments,

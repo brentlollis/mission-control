@@ -58,6 +58,43 @@ interface TransactionItemRow {
   currency?: string
 }
 
+interface InventoryItemRow {
+  id: number
+  business?: string
+  status?: string
+  brand?: string
+  model?: string
+  serial_number?: string
+  sku?: string
+  title?: string
+  year?: string
+  owned?: number
+  asking_price?: number
+  currency?: string
+  ecwid_status?: string
+  reverb_status?: string
+  ebay_status?: string
+  listing_count?: number
+}
+
+interface SoldItemRow {
+  id: number
+  source: string
+  source_sale_id: string
+  source_item_id: string
+  sold_at?: string
+  title?: string
+  sku?: string
+  serial_number?: string
+  amount?: number
+  currency?: string
+  status?: string
+  customer_name?: string
+  brand?: string
+  model?: string
+  tracking_number?: string
+}
+
 interface SourceRow {
   source: string
   source_kind: string
@@ -76,8 +113,13 @@ interface DashboardResponse {
   transactionCount: number
   transactionItemCount: number
   instrumentCount: number
+  inventoryCount: number
+  activeListingCount: number
+  soldItemCount: number
   sourceRecordCount: number
   customers: CustomerRow[]
+  inventoryItems: InventoryItemRow[]
+  soldItems: SoldItemRow[]
   transactions: TransactionRow[]
   transactionItems: TransactionItemRow[]
   shipments: ShipmentRow[]
@@ -166,10 +208,10 @@ export function TrumpetCustomerDashboardPanel() {
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
         <Metric label="Customers" value={String(data?.customerCount || 0)} />
         <Metric label="Transactions" value={String(data?.transactionCount || 0)} />
+        <Metric label="Inventory" value={String(data?.inventoryCount || 0)} />
+        <Metric label="Sold Items" value={String(data?.soldItemCount || 0)} />
         <Metric label="Shipments" value={String(data?.shipmentCount || 0)} />
-        <Metric label="Items" value={String(data?.transactionItemCount || 0)} />
-        <Metric label="Instruments" value={String(data?.instrumentCount || 0)} />
-        <Metric label="Source Rows" value={String(data?.sourceRecordCount || 0)} />
+        <Metric label="Active Listings" value={String(data?.activeListingCount || 0)} />
       </div>
 
       <section className="rounded-lg border border-border bg-card overflow-hidden">
@@ -238,6 +280,78 @@ export function TrumpetCustomerDashboardPanel() {
           </div>
         ) : (
           <EmptyState text="No customers imported yet." />
+        )}
+      </section>
+
+      <section className="rounded-lg border border-border bg-card overflow-hidden">
+        <div className="px-4 py-3 border-b border-border">
+          <h3 className="text-sm font-medium text-foreground">Inventory</h3>
+        </div>
+        {data?.inventoryItems?.length ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs min-w-[980px]">
+              <thead>
+                <tr className="border-b border-border text-muted-foreground">
+                  <th className="text-left px-3 py-2 font-medium">Item</th>
+                  <th className="text-left px-3 py-2 font-medium">Serial</th>
+                  <th className="text-left px-3 py-2 font-medium">Price</th>
+                  <th className="text-left px-3 py-2 font-medium">Ecwid</th>
+                  <th className="text-left px-3 py-2 font-medium">Reverb</th>
+                  <th className="text-left px-3 py-2 font-medium">eBay</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.inventoryItems.map((item) => (
+                  <tr key={item.id} className="border-b border-border/50 hover:bg-secondary/40">
+                    <td className="px-3 py-2 text-foreground font-medium">{itemName(item)}</td>
+                    <td className="px-3 py-2 font-mono text-muted-foreground">{item.serial_number || '-'}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{formatMoney(item.asking_price, item.currency)}</td>
+                    <td className="px-3 py-2">{channelPill(item.ecwid_status)}</td>
+                    <td className="px-3 py-2">{channelPill(item.reverb_status)}</td>
+                    <td className="px-3 py-2">{channelPill(item.ebay_status)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState text="No inventory items imported yet." />
+        )}
+      </section>
+
+      <section className="rounded-lg border border-border bg-card overflow-hidden">
+        <div className="px-4 py-3 border-b border-border">
+          <h3 className="text-sm font-medium text-foreground">Sold Items</h3>
+        </div>
+        {data?.soldItems?.length ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs min-w-[980px]">
+              <thead>
+                <tr className="border-b border-border text-muted-foreground">
+                  <th className="text-left px-3 py-2 font-medium">Source</th>
+                  <th className="text-left px-3 py-2 font-medium">Customer</th>
+                  <th className="text-left px-3 py-2 font-medium">Item</th>
+                  <th className="text-left px-3 py-2 font-medium">Sold</th>
+                  <th className="text-left px-3 py-2 font-medium">Amount</th>
+                  <th className="text-left px-3 py-2 font-medium">Tracking</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.soldItems.map((item) => (
+                  <tr key={item.id} className="border-b border-border/50 hover:bg-secondary/40">
+                    <td className="px-3 py-2 text-muted-foreground">{item.source}</td>
+                    <td className="px-3 py-2 text-foreground font-medium">{item.customer_name || '-'}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{itemName(item)}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{formatDate(item.sold_at)}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{formatMoney(item.amount, item.currency)}</td>
+                    <td className="px-3 py-2 font-mono text-muted-foreground">{item.tracking_number || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState text="No sold items imported yet." />
         )}
       </section>
 
@@ -376,6 +490,15 @@ function StatusPill({ ok, label }: { ok: boolean; label: string }) {
 
 function EmptyState({ text }: { text: string }) {
   return <div className="px-4 py-8 text-center text-xs text-muted-foreground">{text}</div>
+}
+
+function channelPill(status?: string) {
+  if (!status) return <span className="text-2xs px-2 py-1 rounded bg-secondary text-muted-foreground">Missing</span>
+  return <StatusPill ok label={status} />
+}
+
+function itemName(item: { brand?: string; model?: string; title?: string }) {
+  return [item.brand, item.model].filter(Boolean).join(' ') || item.title || '-'
 }
 
 function SpinnerIcon() {
