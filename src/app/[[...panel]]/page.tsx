@@ -29,6 +29,7 @@ import { SuperAdminPanel } from '@/components/panels/super-admin-panel'
 import { OfficePanel } from '@/components/panels/office-panel'
 import { GitHubSyncPanel } from '@/components/panels/github-sync-panel'
 import { MetricoolSocialPanel } from '@/components/panels/metricool-social-panel'
+import { TrumpetCustomerDashboardPanel } from '@/components/panels/trumpet-customer-dashboard-panel'
 import { SkillsPanel } from '@/components/panels/skills-panel'
 import { LocalAgentsDocPanel } from '@/components/panels/local-agents-doc-panel'
 import { ChannelsPanel } from '@/components/panels/channels-panel'
@@ -455,7 +456,7 @@ export default function Home() {
 }
 
 const ESSENTIAL_PANELS = new Set([
-  'overview', 'agents', 'tasks', 'chat', 'activity', 'logs', 'settings', 'social',
+  'overview', 'agents', 'tasks', 'chat', 'activity', 'logs', 'settings', 'social', 'customers',
 ])
 
 function ContentRouter({ tab }: { tab: string }) {
@@ -560,6 +561,8 @@ function ContentRouter({ tab }: { tab: string }) {
       return <GitHubSyncPanel />
     case 'social':
       return <MetricoolSocialPanel />
+    case 'customers':
+      return <TrumpetCustomerDashboardPanel />
     case 'office':
       return <OfficePanel />
     case 'skills':

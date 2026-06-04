@@ -42,6 +42,14 @@ This Mission Control checkout tracks upstream releases, but this machine is inte
 - Reason: Creative State, Bellara Brass, and Heritage Trumpets need one repeatable social operations surface across sessions without duplicating Metricool API logic in Mission Control.
 - Safety: the route only calls allowlisted agent commands, requires Mission Control auth, writes local JSON state/audit files under `C:\Users\brent-ai\Projects\_system\mission-control\data\metricool-social`, dry-runs schedules, and requires a human UI click before creating or updating live Metricool Posts Library drafts. Autolist records are inventory only; approved/drafted caption saves sync to Posts Library as the default persistence target.
 
+## Patch: Trumpet Customer Dashboard Panel
+
+- Files: `src/app/api/local/trumpet-customer-dashboard/route.ts`, `src/components/panels/trumpet-customer-dashboard-panel.tsx`, `src/app/[[...panel]]/page.tsx`, `src/components/layout/nav-rail.tsx`
+- Purpose: expose the local `trumpet-customer-dashboard` SQLite customer database in Mission Control with customer, source, transaction, and shipment summaries plus a link to the standalone local web app.
+- Backend source of truth: `C:\Users\brent-ai\Projects\active\trumpet-customer-dashboard`
+- Reason: Heritage Trumpets and Bellara Brass need one customer surface that can combine Shippo labels, marketplace sales, Ecwid orders, and trumpets bought/sold spreadsheet rows into unified customer records.
+- Safety: the Mission Control route is read-only, requires viewer auth, reads only sanitized summary fields from the local SQLite database, and does not expose Shippo secrets, label URLs, label PDFs, or raw source JSON.
+
 ## Local Config That Must Survive Updates
 
 These are intentionally in `.env`, which is ignored by git:
