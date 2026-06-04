@@ -103,6 +103,18 @@ interface SourceRow {
   last_imported_at?: string
 }
 
+interface SyncRunRow {
+  id: number
+  source: string
+  source_kind: string
+  status: string
+  fetched_count: number
+  imported_count: number
+  error_count: number
+  started_at?: string
+  finished_at?: string
+}
+
 interface DashboardResponse {
   ok: boolean
   generatedAt: string
@@ -125,6 +137,7 @@ interface DashboardResponse {
   transactionItems: TransactionItemRow[]
   shipments: ShipmentRow[]
   sources: SourceRow[]
+  syncRuns: SyncRunRow[]
 }
 
 export function TrumpetCustomerDashboardPanel() {
@@ -217,6 +230,43 @@ export function TrumpetCustomerDashboardPanel() {
 
       <section className="rounded-lg border border-border bg-card overflow-hidden">
         <div className="px-4 py-3 border-b border-border flex flex-col gap-1">
+          <h3 className="text-sm font-medium text-foreground">Sync Status</h3>
+          <p className="text-2xs text-muted-foreground">Latest source syncs into the local customer database.</p>
+        </div>
+        {data?.syncRuns?.length ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs min-w-[720px]">
+              <thead>
+                <tr className="border-b border-border text-muted-foreground">
+                  <th className="text-left px-3 py-2 font-medium">Source</th>
+                  <th className="text-left px-3 py-2 font-medium">Kind</th>
+                  <th className="text-left px-3 py-2 font-medium">Status</th>
+                  <th className="text-left px-3 py-2 font-medium">Imported</th>
+                  <th className="text-left px-3 py-2 font-medium">Finished</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.syncRuns.slice(0, 8).map((run) => (
+                  <tr key={run.id} className="border-b border-border/50">
+                    <td className="px-3 py-2 text-foreground">{sourceName(run.source)}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{kindName(run.source_kind)}</td>
+                    <td className="px-3 py-2">
+                      <StatusPill ok={run.error_count === 0 && !/error|fail/i.test(run.status)} label={run.status} />
+                    </td>
+                    <td className="px-3 py-2 font-mono text-muted-foreground">{run.imported_count} / {run.fetched_count}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{formatDate(run.finished_at || run.started_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState text="No sync runs captured yet." />
+        )}
+      </section>
+
+      <section className="rounded-lg border border-border bg-card overflow-hidden">
+        <div className="px-4 py-3 border-b border-border flex flex-col gap-1">
           <h3 className="text-sm font-medium text-foreground">Import Sources</h3>
           <p className="text-2xs text-muted-foreground truncate" title={sourceLabel}>{sourceLabel}</p>
         </div>
@@ -234,8 +284,8 @@ export function TrumpetCustomerDashboardPanel() {
               <tbody>
                 {data.sources.map((source) => (
                   <tr key={`${source.source}-${source.source_kind}`} className="border-b border-border/50">
-                    <td className="px-3 py-2 text-foreground">{source.source}</td>
-                    <td className="px-3 py-2 text-muted-foreground">{source.source_kind}</td>
+                    <td className="px-3 py-2 text-foreground">{sourceName(source.source)}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{kindName(source.source_kind)}</td>
                     <td className="px-3 py-2 font-mono text-muted-foreground">{source.count}</td>
                     <td className="px-3 py-2 text-muted-foreground">{formatDate(source.last_imported_at)}</td>
                   </tr>
@@ -516,6 +566,21 @@ function formatMatchEvidence(value?: string) {
     .filter(Boolean)
     .map((entry) => labels[entry] || entry)
     .join(', ') || '-'
+}
+
+function sourceName(source?: string) {
+  const labels: Record<string, string> = {
+    bought_sold_sheet: 'Bought/Sold Sheet',
+    ebay: 'eBay',
+    ecwid: 'Ecwid',
+    reverb: 'Reverb',
+    shippo: 'Shippo'
+  }
+  return labels[source || ''] || source || '-'
+}
+
+function kindName(kind?: string) {
+  return String(kind || '-').replaceAll('_', ' ')
 }
 
 function SpinnerIcon() {

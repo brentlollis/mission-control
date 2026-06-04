@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Database from 'better-sqlite3'
 import { existsSync } from 'node:fs'
-import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { requireRole } from '@/lib/auth'
 
+const BRENT_AI_PROJECTS_ROOT = process.env.BRENT_AI_PROJECTS_ROOT
+  || 'C:\\Users\\brent-ai\\Projects'
 const DASHBOARD_DIR = process.env.TRUMPET_CUSTOMER_DASHBOARD_DIR
-  || join(homedir(), 'Projects', 'active', 'trumpet-customer-dashboard')
+  || join(BRENT_AI_PROJECTS_ROOT, 'active', 'trumpet-customer-dashboard')
 const DASHBOARD_DB = process.env.TRUMPET_CUSTOMER_DASHBOARD_DB
   || join(DASHBOARD_DIR, 'data', 'trumpet-customers.sqlite')
 const DASHBOARD_URL = process.env.TRUMPET_CUSTOMER_DASHBOARD_URL
@@ -42,6 +43,7 @@ function dashboardSummary() {
       transactionItems: [],
       shipments: [],
       sources: [],
+      syncRuns: [],
     }
   }
 
@@ -129,6 +131,13 @@ function dashboardSummary() {
       GROUP BY source, source_kind
       ORDER BY MAX(imported_at) DESC
     `).all()
+    const syncRuns = db.prepare(`
+      SELECT id, source, source_kind, status, window_start, window_end,
+        fetched_count, imported_count, error_count, started_at, finished_at
+      FROM sync_runs
+      ORDER BY started_at DESC, id DESC
+      LIMIT 20
+    `).all()
 
     return {
       ok: true,
@@ -151,6 +160,7 @@ function dashboardSummary() {
       transactionItems,
       shipments,
       sources,
+      syncRuns,
     }
   } finally {
     db.close()

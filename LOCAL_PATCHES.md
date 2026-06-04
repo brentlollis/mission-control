@@ -46,8 +46,10 @@ This Mission Control checkout tracks upstream releases, but this machine is inte
 
 - Files: `src/app/api/local/trumpet-customer-dashboard/route.ts`, `src/components/panels/trumpet-customer-dashboard-panel.tsx`, `src/app/[[...panel]]/page.tsx`, `src/components/layout/nav-rail.tsx`
 - Purpose: expose the local `trumpet-customer-dashboard` SQLite customer database in Mission Control with customer, inventory, active listing, sold item, source, transaction, item, instrument, and shipment summaries plus a link to the standalone local web app.
+- Current extension: includes Sync Status and Import Sources sections backed by the dashboard `sync_runs` and `source_records` tables.
 - Backend source of truth: `C:\Users\brent-ai\Projects\active\trumpet-customer-dashboard`
 - Reason: Heritage Trumpets and Bellara Brass need one customer surface that can combine Shippo labels, marketplace sales, Ecwid orders, and trumpets bought/sold spreadsheet rows into unified customer records.
+- Runtime note: Mission Control runs as SYSTEM on this machine, so this patch uses the fixed Brent AI projects root (`C:\Users\brent-ai\Projects`) by default instead of `homedir()`.
 - Safety: the Mission Control route is read-only, requires viewer auth, reads only sanitized summary fields from the local SQLite database, and does not expose Shippo secrets, label URLs, label PDFs, or raw source JSON.
 
 ## Local Config That Must Survive Updates
