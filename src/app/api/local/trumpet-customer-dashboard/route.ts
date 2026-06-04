@@ -92,9 +92,11 @@ function dashboardSummary() {
         MAX(CASE WHEN il.source = 'ecwid' THEN il.status END) AS ecwid_status,
         MAX(CASE WHEN il.source = 'reverb' THEN il.status END) AS reverb_status,
         MAX(CASE WHEN il.source = 'ebay' THEN il.status END) AS ebay_status,
+        GROUP_CONCAT(DISTINCT ime.match_type) AS match_evidence,
         COUNT(DISTINCT il.id) AS listing_count
       FROM inventory_items ii
       LEFT JOIN inventory_listings il ON il.inventory_item_id = ii.id
+      LEFT JOIN item_match_events ime ON ime.inventory_item_id = ii.id
       WHERE ii.owned = 1 OR ii.status IN ('owned', 'listed')
       GROUP BY ii.id
       ORDER BY ii.owned DESC, COALESCE(ii.updated_at, ii.created_at) DESC

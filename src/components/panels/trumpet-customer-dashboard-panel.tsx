@@ -74,6 +74,7 @@ interface InventoryItemRow {
   ecwid_status?: string
   reverb_status?: string
   ebay_status?: string
+  match_evidence?: string
   listing_count?: number
 }
 
@@ -298,6 +299,7 @@ export function TrumpetCustomerDashboardPanel() {
                   <th className="text-left px-3 py-2 font-medium">Ecwid</th>
                   <th className="text-left px-3 py-2 font-medium">Reverb</th>
                   <th className="text-left px-3 py-2 font-medium">eBay</th>
+                  <th className="text-left px-3 py-2 font-medium">Match</th>
                 </tr>
               </thead>
               <tbody>
@@ -309,6 +311,7 @@ export function TrumpetCustomerDashboardPanel() {
                     <td className="px-3 py-2">{channelPill(item.ecwid_status)}</td>
                     <td className="px-3 py-2">{channelPill(item.reverb_status)}</td>
                     <td className="px-3 py-2">{channelPill(item.ebay_status)}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{formatMatchEvidence(item.match_evidence)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -499,6 +502,20 @@ function channelPill(status?: string) {
 
 function itemName(item: { brand?: string; model?: string; title?: string }) {
   return [item.brand, item.model].filter(Boolean).join(' ') || item.title || '-'
+}
+
+function formatMatchEvidence(value?: string) {
+  const labels: Record<string, string> = {
+    ecwid_product_reference: 'Ecwid ID',
+    serial_number: 'Serial',
+    sku: 'SKU',
+    new_item: 'New'
+  }
+  return String(value || '')
+    .split(',')
+    .filter(Boolean)
+    .map((entry) => labels[entry] || entry)
+    .join(', ') || '-'
 }
 
 function SpinnerIcon() {
