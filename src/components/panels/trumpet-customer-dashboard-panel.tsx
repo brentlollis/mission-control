@@ -71,6 +71,10 @@ interface InventoryItemRow {
   owned?: number
   asking_price?: number
   currency?: string
+  thumbnail_url?: string
+  photo_url?: string
+  best_thumbnail_url?: string
+  best_photo_url?: string
   ecwid_status?: string
   reverb_status?: string
   ebay_status?: string
@@ -89,6 +93,10 @@ interface SoldItemRow {
   serial_number?: string
   amount?: number
   currency?: string
+  thumbnail_url?: string
+  photo_url?: string
+  best_thumbnail_url?: string
+  best_photo_url?: string
   status?: string
   customer_name?: string
   brand?: string
@@ -355,7 +363,14 @@ export function TrumpetCustomerDashboardPanel() {
               <tbody>
                 {data.inventoryItems.map((item) => (
                   <tr key={item.id} className="border-b border-border/50 hover:bg-secondary/40">
-                    <td className="px-3 py-2 text-foreground font-medium">{itemName(item)}</td>
+                    <td className="px-3 py-2 text-foreground font-medium">
+                      <ItemWithThumbnail
+                        title={itemName(item)}
+                        subtitle={[item.sku, item.serial_number].filter(Boolean).join(' · ')}
+                        thumbnailUrl={item.best_thumbnail_url || item.thumbnail_url}
+                        photoUrl={item.best_photo_url || item.photo_url}
+                      />
+                    </td>
                     <td className="px-3 py-2 font-mono text-muted-foreground">{item.serial_number || '-'}</td>
                     <td className="px-3 py-2 text-muted-foreground">{formatMoney(item.asking_price, item.currency)}</td>
                     <td className="px-3 py-2">{channelPill(item.ecwid_status)}</td>
@@ -394,7 +409,14 @@ export function TrumpetCustomerDashboardPanel() {
                   <tr key={item.id} className="border-b border-border/50 hover:bg-secondary/40">
                     <td className="px-3 py-2 text-muted-foreground">{item.source}</td>
                     <td className="px-3 py-2 text-foreground font-medium">{item.customer_name || '-'}</td>
-                    <td className="px-3 py-2 text-muted-foreground">{itemName(item)}</td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      <ItemWithThumbnail
+                        title={itemName(item)}
+                        subtitle={[item.sku, item.serial_number].filter(Boolean).join(' · ')}
+                        thumbnailUrl={item.best_thumbnail_url || item.thumbnail_url}
+                        photoUrl={item.best_photo_url || item.photo_url}
+                      />
+                    </td>
                     <td className="px-3 py-2 text-muted-foreground">{formatDate(item.sold_at)}</td>
                     <td className="px-3 py-2 text-muted-foreground">{formatMoney(item.amount, item.currency)}</td>
                     <td className="px-3 py-2 font-mono text-muted-foreground">{item.tracking_number || '-'}</td>
@@ -545,6 +567,45 @@ function EmptyState({ text }: { text: string }) {
   return <div className="px-4 py-8 text-center text-xs text-muted-foreground">{text}</div>
 }
 
+function ItemWithThumbnail({
+  title,
+  subtitle,
+  thumbnailUrl,
+  photoUrl
+}: {
+  title: string
+  subtitle?: string
+  thumbnailUrl?: string
+  photoUrl?: string
+}) {
+  const thumb = (
+    <span className={`w-12 h-12 shrink-0 rounded-md border border-border overflow-hidden inline-flex items-center justify-center ${
+      thumbnailUrl ? 'bg-secondary' : 'bg-primary/10 text-primary'
+    }`}>
+      {thumbnailUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={thumbnailUrl} alt={title || 'Item photo'} className="w-full h-full object-cover" loading="lazy" referrerPolicy="no-referrer" />
+      ) : (
+        <span className="text-2xs font-semibold">{initials(title)}</span>
+      )}
+    </span>
+  )
+
+  return (
+    <div className="flex items-center gap-2.5 min-w-[220px]">
+      {photoUrl ? (
+        <a href={photoUrl} target="_blank" rel="noopener noreferrer" title="Open item photos" className="rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+          {thumb}
+        </a>
+      ) : thumb}
+      <span className="min-w-0">
+        <span className="block truncate text-foreground font-medium">{title || '-'}</span>
+        {subtitle && <span className="block truncate text-2xs text-muted-foreground mt-0.5">{subtitle}</span>}
+      </span>
+    </div>
+  )
+}
+
 function channelPill(status?: string) {
   if (!status) return <span className="text-2xs px-2 py-1 rounded bg-secondary text-muted-foreground">Missing</span>
   return <StatusPill ok label={status} />
@@ -552,6 +613,11 @@ function channelPill(status?: string) {
 
 function itemName(item: { brand?: string; model?: string; title?: string }) {
   return [item.brand, item.model].filter(Boolean).join(' ') || item.title || '-'
+}
+
+function initials(value?: string) {
+  const parts = String(value || 'Item').trim().split(/\s+/).filter(Boolean)
+  return parts.slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'IT'
 }
 
 function formatMatchEvidence(value?: string) {

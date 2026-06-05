@@ -90,7 +90,9 @@ function dashboardSummary() {
     `).all()
     const inventoryItems = db.prepare(`
       SELECT ii.id, ii.business, ii.status, ii.brand, ii.model, ii.serial_number, ii.sku, ii.title,
-        ii.year, ii.bore_size, ii.owned, ii.asking_price, ii.currency, ii.confidence,
+        ii.year, ii.bore_size, ii.owned, ii.asking_price, ii.currency, ii.thumbnail_url, ii.photo_url, ii.confidence,
+        COALESCE(ii.thumbnail_url, MAX(il.thumbnail_url)) AS best_thumbnail_url,
+        COALESCE(ii.photo_url, MAX(il.photo_url), MAX(il.listing_url)) AS best_photo_url,
         MAX(CASE WHEN il.source = 'ecwid' THEN il.status END) AS ecwid_status,
         MAX(CASE WHEN il.source = 'reverb' THEN il.status END) AS reverb_status,
         MAX(CASE WHEN il.source = 'ebay' THEN il.status END) AS ebay_status,
@@ -106,8 +108,9 @@ function dashboardSummary() {
     `).all()
     const soldItems = db.prepare(`
       SELECT si.id, si.source, si.source_sale_id, si.source_item_id, si.sold_at, si.title, si.sku,
-        si.serial_number, si.amount, si.currency, si.status, c.display_name AS customer_name,
-        ii.brand, ii.model, s.tracking_number
+        si.serial_number, si.amount, si.currency, si.thumbnail_url, si.photo_url, si.status, c.display_name AS customer_name,
+        ii.brand, ii.model, COALESCE(si.thumbnail_url, ii.thumbnail_url) AS best_thumbnail_url,
+        COALESCE(si.photo_url, ii.photo_url) AS best_photo_url, s.tracking_number
       FROM sold_items si
       LEFT JOIN customers c ON c.id = si.customer_id
       LEFT JOIN inventory_items ii ON ii.id = si.inventory_item_id
