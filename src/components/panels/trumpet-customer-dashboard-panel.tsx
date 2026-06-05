@@ -236,6 +236,18 @@ export function TrumpetCustomerDashboardPanel() {
         <Metric label="Active Listings" value={String(data?.activeListingCount || 0)} />
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant="outline" size="sm" asChild title="Jump to inventory thumbnails">
+          <a href="#trumpet-inventory">Inventory</a>
+        </Button>
+        <Button variant="outline" size="sm" asChild title="Jump to sold item thumbnails">
+          <a href="#trumpet-sold-items">Sold Items</a>
+        </Button>
+        <Button variant="outline" size="sm" asChild title="Jump to customer list">
+          <a href="#trumpet-customers">Customers</a>
+        </Button>
+      </div>
+
       <section className="rounded-lg border border-border bg-card overflow-hidden">
         <div className="px-4 py-3 border-b border-border flex flex-col gap-1">
           <h3 className="text-sm font-medium text-foreground">Sync Status</h3>
@@ -306,7 +318,7 @@ export function TrumpetCustomerDashboardPanel() {
         )}
       </section>
 
-      <section className="rounded-lg border border-border bg-card overflow-hidden">
+      <section id="trumpet-customers" className="rounded-lg border border-border bg-card overflow-hidden scroll-mt-20">
         <div className="px-4 py-3 border-b border-border">
           <h3 className="text-sm font-medium text-foreground">Customers</h3>
         </div>
@@ -342,7 +354,7 @@ export function TrumpetCustomerDashboardPanel() {
         )}
       </section>
 
-      <section className="rounded-lg border border-border bg-card overflow-hidden">
+      <section id="trumpet-inventory" className="rounded-lg border border-border bg-card overflow-hidden scroll-mt-20">
         <div className="px-4 py-3 border-b border-border">
           <h3 className="text-sm font-medium text-foreground">Inventory</h3>
         </div>
@@ -387,7 +399,7 @@ export function TrumpetCustomerDashboardPanel() {
         )}
       </section>
 
-      <section className="rounded-lg border border-border bg-card overflow-hidden">
+      <section id="trumpet-sold-items" className="rounded-lg border border-border bg-card overflow-hidden scroll-mt-20">
         <div className="px-4 py-3 border-b border-border">
           <h3 className="text-sm font-medium text-foreground">Sold Items</h3>
         </div>

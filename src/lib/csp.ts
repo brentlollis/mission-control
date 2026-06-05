@@ -1,5 +1,10 @@
 export function buildMissionControlCsp(input: { nonce: string; googleEnabled: boolean }): string {
   const { nonce, googleEnabled } = input
+  const commerceImageHosts = [
+    'https://d2j6dbq0eux0bg.cloudfront.net',
+    'https://rvb-img.reverb.com',
+    'https://i.ebayimg.com',
+  ].join(' ')
 
   return [
     `default-src 'self'`,
@@ -11,7 +16,7 @@ export function buildMissionControlCsp(input: { nonce: string; googleEnabled: bo
     `style-src-elem 'self' 'unsafe-inline'`,
     `style-src-attr 'unsafe-inline'`,
     `connect-src 'self' ws: wss: http://127.0.0.1:* http://localhost:* https://cdn.jsdelivr.net`,
-    `img-src 'self' data: blob:${googleEnabled ? ' https://*.googleusercontent.com https://lh3.googleusercontent.com' : ''}`,
+    `img-src 'self' data: blob: ${commerceImageHosts}${googleEnabled ? ' https://*.googleusercontent.com https://lh3.googleusercontent.com' : ''}`,
     `font-src 'self' data:`,
     `frame-src 'self'${googleEnabled ? ' https://accounts.google.com' : ''}`,
     `worker-src 'self' blob:`,

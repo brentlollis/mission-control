@@ -10,6 +10,14 @@ describe('buildMissionControlCsp', () => {
     expect(csp).toContain("style-src-elem 'self' 'unsafe-inline'")
     expect(csp).toContain("style-src-attr 'unsafe-inline'")
   })
+
+  it('allows known commerce thumbnail image hosts', () => {
+    const csp = buildMissionControlCsp({ nonce: 'nonce-123', googleEnabled: false })
+
+    expect(csp).toContain('https://d2j6dbq0eux0bg.cloudfront.net')
+    expect(csp).toContain('https://rvb-img.reverb.com')
+    expect(csp).toContain('https://i.ebayimg.com')
+  })
 })
 
 describe('buildNonceRequestHeaders', () => {

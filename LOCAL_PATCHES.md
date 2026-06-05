@@ -50,13 +50,20 @@ This Mission Control checkout tracks upstream releases, but this machine is inte
 
 ## Patch: Trumpet Customer Dashboard Panel
 
-- Files: `src/app/api/local/trumpet-customer-dashboard/route.ts`, `src/components/panels/trumpet-customer-dashboard-panel.tsx`, `src/app/[[...panel]]/page.tsx`, `src/components/layout/nav-rail.tsx`
+- Files: `src/app/api/local/trumpet-customer-dashboard/route.ts`, `src/components/panels/trumpet-customer-dashboard-panel.tsx`, `src/app/[[...panel]]/page.tsx`, `src/components/layout/nav-rail.tsx`, `src/lib/csp.ts`
 - Purpose: expose the local `trumpet-customer-dashboard` SQLite customer database in Mission Control with customer, inventory, active listing, sold item, source, transaction, item, instrument, and shipment summaries plus a link to the standalone local web app.
-- Current extension: includes Sync Status and Import Sources sections backed by the dashboard `sync_runs` and `source_records` tables, plus thumbnail/photo-link rendering for Inventory and Sold Items using normalized dashboard `thumbnail_url` and `photo_url` fields.
+- Current extension: includes Sync Status and Import Sources sections backed by the dashboard `sync_runs` and `source_records` tables, jump links for Inventory/Sold Items/Customers, and thumbnail/photo-link rendering for Inventory and Sold Items using normalized dashboard `thumbnail_url` and `photo_url` fields. Mission Control CSP allows the known commerce image hosts used by these thumbnails.
 - Backend source of truth: `C:\Users\brent-ai\Projects\active\trumpet-customer-dashboard`
 - Reason: Heritage Trumpets and Bellara Brass need one customer surface that can combine Shippo labels, marketplace sales, Ecwid orders, and trumpets bought/sold spreadsheet rows into unified customer records.
 - Runtime note: Mission Control runs as SYSTEM on this machine, so this patch uses the fixed Brent AI projects root (`C:\Users\brent-ai\Projects`) by default instead of `homedir()`.
 - Safety: the Mission Control route is read-only, requires viewer auth, reads only sanitized summary fields from the local SQLite database, and does not expose Shippo secrets, label URLs, label PDFs, or raw source JSON.
+
+## Patch: Windows Standalone Runtime
+
+- File: `scripts/start-standalone.ps1`
+- Purpose: provide a Windows-native standalone startup path that copies `.next/static` and `public` into `.next/standalone`, then starts `server.js` with the bundled Node 22 runtime when available.
+- Reason: starting `.next\standalone\server.js` directly can serve Next chunks as HTML if static assets were not copied, and system Node can drift from the ABI used by native modules such as `better-sqlite3`.
+- Runtime note: on this machine, the known-good Mission Control Node runtime is `C:\Users\brent-ai\Projects\_system\mission-control\runtime\node-v22.22.3-win-x64\node.exe`.
 
 ## Local Config That Must Survive Updates
 
@@ -87,3 +94,4 @@ After rebasing onto any upstream release:
 8. Verify the dashboard has no missing OpenClaw/gateway banner in local-only mode.
 9. Verify `\AI-Worker\Mission Control Codex Worker` is running and `codex-worker` heartbeats.
 10. Verify `/social` loads the Metricool Social cockpit and `/api/local/metricool-social` returns the configured brands plus Bellara inventory.
+11. Verify `/customers` renders the Trumpet Customers panel, thumbnail image hosts are not blocked by CSP, and a representative `/_next/static/chunks/*.js` asset serves with an `application/javascript` content type.
