@@ -34,6 +34,12 @@ This Mission Control checkout tracks upstream releases, but this machine is inte
 - Purpose: suppress missing-gateway/OpenClaw update prompts when `NEXT_PUBLIC_LOCAL_ONLY=true` and `OPENCLAW_ENABLED=0`.
 - Reason: local-only is the selected architecture on this machine, not an incomplete gateway setup.
 
+## Patch: Onboarding Completion Persistence
+
+- Files: `src/lib/onboarding-session.ts`, `src/lib/__tests__/onboarding-session.test.ts`
+- Purpose: keep the onboarding wizard closed on fresh browser sessions after the admin has completed or skipped it.
+- Reason: completed/skipped onboarding used to auto-replay on every fresh browser session; replay should only happen through the explicit Settings action.
+
 ## Patch: Metricool Social Panel
 
 - Files: `src/app/api/local/metricool-social/route.ts`, `src/lib/metricool-social-workflow.ts`, `src/lib/__tests__/metricool-social-workflow.test.ts`, `src/components/panels/metricool-social-panel.tsx`, `src/app/[[...panel]]/page.tsx`, `src/components/layout/nav-rail.tsx`
