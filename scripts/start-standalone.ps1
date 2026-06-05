@@ -15,6 +15,34 @@ $sourcePublicDir = Join-Path $projectRoot 'public'
 $standalonePublicDir = Join-Path $standaloneDir 'public'
 $bundledNode22 = Join-Path (Resolve-Path (Join-Path $projectRoot '..')) 'runtime\node-v22.22.3-win-x64\node.exe'
 
+function Import-DotEnvFile {
+  param([string]$Path)
+
+  if (-not (Test-Path $Path)) {
+    return
+  }
+
+  foreach ($line in Get-Content -LiteralPath $Path) {
+    $trimmed = $line.Trim()
+    if (-not $trimmed -or $trimmed.StartsWith('#')) {
+      continue
+    }
+
+    $equalsIndex = $trimmed.IndexOf('=')
+    if ($equalsIndex -lt 1) {
+      continue
+    }
+
+    $name = $trimmed.Substring(0, $equalsIndex).Trim()
+    $value = $trimmed.Substring($equalsIndex + 1).Trim()
+    if (($value.StartsWith('"') -and $value.EndsWith('"')) -or ($value.StartsWith("'") -and $value.EndsWith("'"))) {
+      $value = $value.Substring(1, $value.Length - 2)
+    }
+
+    [Environment]::SetEnvironmentVariable($name, $value, 'Process')
+  }
+}
+
 if (-not (Test-Path (Join-Path $standaloneDir 'server.js'))) {
   throw "Standalone server missing at $standaloneDir\server.js. Run pnpm build first."
 }
@@ -36,6 +64,8 @@ if (Test-Path $sourcePublicDir) {
 }
 
 $nodeExe = if (Test-Path $bundledNode22) { $bundledNode22 } else { 'node.exe' }
+Import-DotEnvFile (Join-Path $projectRoot '.env')
+Import-DotEnvFile (Join-Path $projectRoot '.env.local')
 $env:PORT = [string]$Port
 $env:HOSTNAME = $Hostname
 

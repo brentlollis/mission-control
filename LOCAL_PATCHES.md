@@ -61,9 +61,10 @@ This Mission Control checkout tracks upstream releases, but this machine is inte
 ## Patch: Windows Standalone Runtime
 
 - File: `scripts/start-standalone.ps1`
-- Purpose: provide a Windows-native standalone startup path that copies `.next/static` and `public` into `.next/standalone`, then starts `server.js` with the bundled Node 22 runtime when available.
+- Purpose: provide a Windows-native standalone startup path that loads `.env`/`.env.local`, copies `.next/static` and `public` into `.next/standalone`, then starts `server.js` with the bundled Node 22 runtime when available.
 - Reason: starting `.next\standalone\server.js` directly can serve Next chunks as HTML if static assets were not copied, and system Node can drift from the ABI used by native modules such as `better-sqlite3`.
 - Runtime note: on this machine, the known-good Mission Control Node runtime is `C:\Users\brent-ai\Projects\_system\mission-control\runtime\node-v22.22.3-win-x64\node.exe`.
+- Tailscale access: `tailscale serve --bg --yes 7012` exposes Mission Control at `https://desktop-9sr1qs6.tailcf38f9.ts.net/`; `.env` must allow this host in `MC_ALLOWED_HOSTS`.
 
 ## Local Config That Must Survive Updates
 
@@ -72,6 +73,7 @@ These are intentionally in `.env`, which is ignored by git:
 ```text
 OPENCLAW_MEMORY_DIR=C:\Users\brent-ai\Projects
 MC_MEMORY_ALLOWED_PREFIXES=Documentation/;active/autonomous-worker-machine/Documentation/;active/creative-state/Documentation/;active/bellara-brass/Documentation/;active/heritage-trumpets/Documentation/;_system/docs/
+MC_ALLOWED_HOSTS=localhost,127.0.0.1,::1,100.*,desktop-9sr1qs6.tailcf38f9.ts.net
 OPENCLAW_ENABLED=0
 NEXT_PUBLIC_GATEWAY_OPTIONAL=true
 NEXT_PUBLIC_LOCAL_ONLY=true
